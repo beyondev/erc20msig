@@ -2,6 +2,7 @@ package multisig
 
 import (
 	"fmt"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts"
@@ -14,6 +15,41 @@ import (
 const (
 	ERC20Transfer = "transfer(address,uint256)"
 )
+
+func Sign(token, from, to common.Address, value, nonce *big.Int, signer common.Address, keystore, password string) error {
+	hash, err := encodeHash(ERC20Transfer, token, from, to, value, nonce)
+	if err != nil {
+		return err
+	}
+
+	sig, err := sigByKeyStore(hash, keystore, signer, password)
+	if err != nil {
+		return err
+	}
+
+	r, s, v, err := sigValues(sig)
+	if err != nil {
+		return err
+	}
+	fmt.Println("sign transaction successful")
+	//fmt.Println("hex:", hexutil.Encode(sig))
+	fmt.Printf("v: %d\nr: %s\ns: %s\n", v.Uint64(), hexutil.Encode(r.Bytes()), hexutil.Encode(s.Bytes()))
+	return nil
+}
+
+func Send(rpcurl string, token, from, to common.Address, value *big.Int, signatures []string, sender common.Address, keystore, password string) error {
+	//client, err := ethclient.Dial(rpcurl)
+	//if err != nil {
+	//	return err
+	//}
+	//multiSig,err:= msig.NewMsig(from, client)
+	//if err != nil {
+	//	return err
+	//}
+	//client.SendTransaction()
+	//multiSig.Erc20transfer()
+	return nil
+}
 
 func encodeHash(fn string, token, from, to common.Address, value, nonce *big.Int) (common.Hash, error) {
 	var h common.Hash
