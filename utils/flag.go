@@ -42,6 +42,11 @@ var (
 		Usage: "tx sender",
 	}
 
+	KeyFlag = cli.StringFlag{
+		Name:  "key",
+		Usage: "private key",
+	}
+
 	KeystoreFlag = cli.StringFlag{
 		Name:  "keystore",
 		Usage: "keystore path",

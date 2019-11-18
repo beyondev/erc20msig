@@ -1,13 +1,15 @@
 package multisig
 
 import (
+	"crypto/ecdsa"
 	"fmt"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/crypto"
 
 	"golang.org/x/crypto/sha3"
 )
@@ -16,13 +18,19 @@ const (
 	ERC20Transfer = "transfer(address,uint256)"
 )
 
-func Sign(token, from, to common.Address, value, nonce *big.Int, signer common.Address, keystore, password string) error {
+func Sign(token, from, to common.Address, value, nonce *big.Int, signer common.Address, keystore, password string, key *ecdsa.PrivateKey) error {
 	hash, err := encodeHash(ERC20Transfer, token, from, to, value, nonce)
 	if err != nil {
 		return err
 	}
 
-	sig, err := sigByKeyStore(hash, keystore, signer, password)
+	var sig []byte
+	if key != nil {
+		sig, err = sigByKey(hash, key)
+	} else {
+		sig, err = sigByKeyStore(hash, keystore, signer, password)
+	}
+
 	if err != nil {
 		return err
 	}
@@ -31,7 +39,7 @@ func Sign(token, from, to common.Address, value, nonce *big.Int, signer common.A
 	if err != nil {
 		return err
 	}
-	fmt.Println("sign transaction successful")
+	fmt.Println("signed transaction successful")
 	//fmt.Println("hex:", hexutil.Encode(sig))
 	fmt.Printf("v: %d\nr: %s\ns: %s\n", v.Uint64(), hexutil.Encode(r.Bytes()), hexutil.Encode(s.Bytes()))
 	return nil
@@ -100,4 +108,8 @@ func sigByKeyStore(hash common.Hash, dir string, addr common.Address, pass strin
 		return nil, err
 	}
 	return ks.SignHash(acct, hash.Bytes())
+}
+
+func sigByKey(hash common.Hash, key *ecdsa.PrivateKey) ([]byte, error) {
+	return crypto.Sign(hash.Bytes(), key)
 }

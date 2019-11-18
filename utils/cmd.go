@@ -2,9 +2,13 @@ package utils
 
 import (
 	"fmt"
-	"github.com/Beyond-simplechain/erc20msig/multisig"
-	"github.com/urfave/cli"
 	"math/big"
+
+	"github.com/Beyond-simplechain/erc20msig/multisig"
+
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/urfave/cli"
 )
 
 var (
@@ -22,6 +26,17 @@ var (
 				return fmt.Errorf("invalid value: %s", ctx.String(ValueFlag.Name))
 			}
 			nonce := new(big.Int).SetUint64(ctx.Uint64(NonceFlag.Name))
+
+			key := ctx.String(KeyFlag.Name)
+			if key != "" {
+				pk, err := crypto.HexToECDSA(key)
+				if err != nil {
+					return err
+				}
+
+				return multisig.Sign(token, from, to, value, nonce, common.Address{}, "", "", pk)
+			}
+
 			signer, err := FlagToAddress(ctx, &SignerFlag)
 			if err != nil {
 				return err
@@ -32,12 +47,12 @@ var (
 			}
 			password := ctx.String(PasswordFlag.Name)
 
-			return multisig.Sign(token, from, to, value, nonce, signer, keystore, password)
+			return multisig.Sign(token, from, to, value, nonce, signer, keystore, password, nil)
 		},
 		Name:  "sign",
 		Usage: "sign transaction by address",
 		Flags: []cli.Flag{
-			TokenFlag, FromFlag, ToFlag, ValueFlag, NonceFlag, SignerFlag, KeystoreFlag, PasswordFlag,
+			TokenFlag, FromFlag, ToFlag, ValueFlag, NonceFlag, SignerFlag, KeyFlag, KeystoreFlag, PasswordFlag,
 		},
 	}
 
