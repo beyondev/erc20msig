@@ -12,7 +12,6 @@ contract MultiSig {
         address indexed to,
         uint256 indexed value
     );
-    event SigHash(bytes32 indexed hash);
 
     modifier OnlyMember {
         require(membership[msg.sender], "no permission to execute");
@@ -62,7 +61,6 @@ contract MultiSig {
         for (uint256 i = 0; i < threshold; ++i) {
             bytes memory data = abi.encodePacked(func, _token, _from, _to, _value, nonce);
             bytes32 hash = keccak256(data);
-            emit SigHash(hash);
             address member = ecrecover(hash, v[i], r[i], s[i]);
             require(membership[member], "no permission to sign");
             for (uint j=0; j<i; j++) {
